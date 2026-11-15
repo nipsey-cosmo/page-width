@@ -93,18 +93,18 @@ export default class PageWidthPlugin extends Plugin {
 		if (host.hasClass(HOST_CLASS)) return;
 		host.addClass(HOST_CLASS);
 		// Positioning is pure CSS (styles.css), so nothing here needs re-measuring on resize.
-		// The overlay mirrors the scroller's box (including its scrollbar gutter); the handles sit inside it.
+		// The overlay mirrors the scroller's box (including its scrollbar gutter); the handle sits inside it.
 		const overlay = host.createDiv({ cls: 'page-width-handles' });
-		for (const side of ['left', 'right']) {
-			const handle = overlay.createDiv({ cls: `page-width-handle mod-${side}` });
-			// Plain listeners, not this.registerDomEvent: those would keep closed views alive until
-			// plugin unload. The listeners go away with the overlay (removed by detach on unload).
-			handle.addEventListener('pointerdown', (e) => this.startDrag(e, view, handle));
-			// The handles sit over the scroller's margin, so pass wheel scrolling through to it.
-			handle.addEventListener('wheel', (e) => scrollerOf(view)?.scrollBy(e.deltaX, e.deltaY), {
-				passive: true,
-			});
-		}
+		// One handle, on the right: the drag is symmetric, so one edge sets any width, and the left
+		// margin stays clear for Obsidian's heading fold arrows.
+		const handle = overlay.createDiv({ cls: 'page-width-handle mod-right' });
+		// Plain listeners, not this.registerDomEvent: those would keep closed views alive until
+		// plugin unload. The listeners go away with the overlay (removed by detach on unload).
+		handle.addEventListener('pointerdown', (e) => this.startDrag(e, view, handle));
+		// The handle sits over the scroller's margin, so pass wheel scrolling through to it.
+		handle.addEventListener('wheel', (e) => scrollerOf(view)?.scrollBy(e.deltaX, e.deltaY), {
+			passive: true,
+		});
 	}
 
 	private startDrag(e: PointerEvent, view: MarkdownView, handle: HTMLElement) {
