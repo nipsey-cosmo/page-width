@@ -68,9 +68,10 @@
 .page-width-handle {
 	pointer-events: auto;
 	position: absolute;
-	top: 0;
-	bottom: 0;
-	width: 8px;
+	/* A short grip, vertically centred in the pane; the hit area is a little larger than the pill. */
+	top: 50%;
+	height: 56px;
+	width: 12px;
 	cursor: col-resize;
 	touch-action: none;
 }
@@ -79,31 +80,26 @@
    checkboxes or anything else at the edge of a line. */
 .page-width-handle.mod-left {
 	left: calc(50% - var(--page-width-column) / 2);
-	transform: translateX(-100%);
+	transform: translate(-100%, -50%);
 }
 
 .page-width-handle.mod-right {
 	left: calc(50% + var(--page-width-column) / 2);
+	transform: translateY(-50%);
 }
 
-/* Thin line hugging the column edge: always visible so the margins can be found,
+/* The visible grip: a short rounded pill centred in the hit area, always visible,
    accent-coloured on hover or while dragging. */
 .page-width-handle::after {
 	content: '';
 	position: absolute;
-	top: 0;
-	bottom: 0;
-	width: 2px;
-	background: var(--background-modifier-border);
+	top: 8px;
+	bottom: 8px;
+	left: 4px;
+	width: 4px;
+	border-radius: 2px;
+	background: var(--background-modifier-border-hover);
 	transition: background-color 120ms ease;
-}
-
-.page-width-handle.mod-left::after {
-	right: 0;
-}
-
-.page-width-handle.mod-right::after {
-	left: 0;
 }
 
 .page-width-handle:hover::after,
