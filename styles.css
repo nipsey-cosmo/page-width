@@ -52,14 +52,19 @@
 	pointer-events: none;
 	z-index: 1;
 	/* Same maths as Obsidian's sizer: max-width var(--file-line-width) inside --file-margins-x padding. */
-	--page-width-column: min(var(--file-line-width), 100% - 2 * var(--file-margins-x));
+	/* --file-margins-x is recent (absent up to at least 1.8.10, where --file-margins is one value,
+	   --size-4-8), so fall back to that default. */
+	--page-width-column: min(var(--file-line-width), 100% - 2 * var(--file-margins-x, var(--size-4-8)));
 }
 
 /*
  * Obsidian shrinks the margins in the sidebars by setting `--file-margins: var(--size-4-5)` on
  * the scroller itself (app.css: `.mod-primary-split .markdown-preview-view, ... .cm-scroller`),
- * which the overlay, a sibling, cannot inherit. Mirror it here.
+ * which the overlay, a sibling, cannot inherit. Mirror it here. Older versions (1.0.0 to at
+ * least 1.8.10) use the left/right class names for the same rule.
  */
+.mod-left-split .page-width-handles,
+.mod-right-split .page-width-handles,
 .mod-primary-split .page-width-handles,
 .mod-secondary-split .page-width-handles {
 	--file-margins-x: var(--size-4-5);

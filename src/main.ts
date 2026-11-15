@@ -140,10 +140,13 @@ export default class PageWidthPlugin extends Plugin {
 
 /** The element that scrolls and pads the column in the view's current mode. */
 function scrollerOf(view: MarkdownView): HTMLElement | null {
+	// Descendant selectors, not child chains: the wrappers between these elements have changed
+	// across Obsidian versions. querySelector returns the first match in document order, which is
+	// the outer scroller, before any nested one (embeds, table cell editors).
 	const selector =
 		view.getMode() === 'preview'
-			? ':scope > .markdown-reading-view > .markdown-preview-view'
-			: ':scope > .markdown-source-view > .cm-editor > .cm-scroller';
+			? '.markdown-reading-view .markdown-preview-view'
+			: '.markdown-source-view .cm-scroller';
 	return view.contentEl.querySelector<HTMLElement>(selector);
 }
 
