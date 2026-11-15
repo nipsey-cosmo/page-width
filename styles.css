@@ -1,0 +1,99 @@
+/* ---------- Status bar presets ---------- */
+
+.page-width-bar {
+	display: flex;
+	gap: 2px;
+}
+
+.page-width-bar .page-width-button {
+	height: auto;
+	padding: 0 6px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: transparent;
+	box-shadow: none;
+	border-radius: var(--radius-s);
+	cursor: var(--cursor);
+}
+
+.page-width-bar .page-width-button:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.page-width-bar .page-width-button.is-active {
+	color: var(--text-on-accent);
+	background: var(--interactive-accent);
+}
+
+.page-width-bar .page-width-button:focus-visible {
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+}
+
+/* ---------- Drag handles ---------- */
+
+/* The markdown view's `.view-content` is the positioning context for the overlay. */
+.page-width-host {
+	position: relative;
+}
+
+/*
+ * Overlay covering the view. Obsidian's scrollers (edit `.cm-scroller`, reading
+ * `.markdown-preview-view`) use `scrollbar-gutter: stable`, so the column is centred in the
+ * width left after the scrollbar. Giving the overlay the same gutter makes its padding box
+ * match the scroller's, whatever the platform's scrollbar width, without measuring in JS.
+ * `100%` below is that padding-box width (the handles are its direct children).
+ */
+.page-width-handles {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	scrollbar-gutter: stable;
+	pointer-events: none;
+	z-index: 1;
+	/* Same maths as Obsidian's sizer: max-width var(--file-line-width) inside --file-margins-x padding. */
+	--page-width-column: min(var(--file-line-width), 100% - 2 * var(--file-margins-x));
+}
+
+.page-width-handle {
+	pointer-events: auto;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	transform: translateX(-50%); /* centre the hit area on the column edge */
+	cursor: col-resize;
+	touch-action: none;
+}
+
+.page-width-handle.mod-left {
+	left: calc(50% - var(--page-width-column) / 2);
+}
+
+.page-width-handle.mod-right {
+	left: calc(50% + var(--page-width-column) / 2);
+}
+
+/* Thin visible line, shown only on hover or while dragging. */
+.page-width-handle::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 3px;
+	width: 2px;
+	background: var(--interactive-accent);
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.page-width-handle:hover::after,
+.page-width-handle.is-dragging::after {
+	opacity: 0.6;
+}
+
+/* --file-line-width only applies with "Readable line length" on; without it, dragging would do nothing. */
+.page-width-host:not(:has(> .markdown-source-view.is-readable-line-width, > .markdown-reading-view > .is-readable-line-width))
+	> .page-width-handles {
+	display: none;
+}
