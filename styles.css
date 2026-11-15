@@ -86,16 +86,16 @@
 	left: calc(50% + var(--page-width-column) / 2);
 }
 
-/* Thin visible line hugging the column edge, shown only on hover or while dragging. */
+/* Thin line hugging the column edge: always visible so the margins can be found,
+   accent-coloured on hover or while dragging. */
 .page-width-handle::after {
 	content: '';
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	width: 2px;
-	background: var(--interactive-accent);
-	opacity: 0;
-	transition: opacity 120ms ease;
+	background: var(--background-modifier-border);
+	transition: background-color 120ms ease;
 }
 
 .page-width-handle.mod-left::after {
@@ -108,7 +108,7 @@
 
 .page-width-handle:hover::after,
 .page-width-handle.is-dragging::after {
-	opacity: 0.6;
+	background: var(--interactive-accent);
 }
 
 /* --file-line-width only applies with "Readable line length" on; without it, dragging would do nothing. */
