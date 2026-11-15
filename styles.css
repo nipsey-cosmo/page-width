@@ -81,13 +81,8 @@
 	touch-action: none;
 }
 
-/* Hit areas sit wholly in the margins, touching the column edge, so they never cover text,
-   checkboxes or anything else at the edge of a line. */
-.page-width-handle.mod-left {
-	left: calc(50% - var(--page-width-column) / 2);
-	transform: translate(-100%, -50%);
-}
-
+/* The hit area sits wholly in the right margin, touching the column edge, so it never covers text
+   or anything else at the end of a line. */
 .page-width-handle.mod-right {
 	left: calc(50% + var(--page-width-column) / 2);
 	transform: translateY(-50%);

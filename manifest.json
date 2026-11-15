@@ -3,7 +3,7 @@
 	"name": "Page Width",
 	"version": "1.0.1",
 	"minAppVersion": "1.0.0",
-	"description": "Resize the readable text column by dragging its margins, or pick Narrow, Wide or Max from the status bar.",
+	"description": "Resize the readable text column by dragging its right edge, or pick Narrow, Wide or Max from the status bar.",
 	"author": "Adam Tweedie",
 	"isDesktopOnly": true
 }
