@@ -95,16 +95,17 @@
 	position: absolute;
 	top: 8px;
 	bottom: 8px;
-	left: 4px;
-	width: 4px;
-	border-radius: 2px;
-	background: var(--background-modifier-border-hover);
-	transition: background-color 120ms ease;
+	left: 3px;
+	width: 6px;
+	box-sizing: border-box;
+	border: 1px solid var(--background-modifier-border-hover);
+	border-radius: 3px;
+	transition: border-color 120ms ease;
 }
 
 .page-width-handle:hover::after,
 .page-width-handle.is-dragging::after {
-	background: var(--interactive-accent);
+	border-color: var(--interactive-accent);
 }
 
 /* --file-line-width only applies with "Readable line length" on; without it, dragging would do nothing. */
