@@ -113,8 +113,9 @@
 	border-color: var(--interactive-accent);
 }
 
-/* --file-line-width only applies with "Readable line length" on; without it, dragging would do nothing. */
-.page-width-host:not(:has(> .markdown-source-view.is-readable-line-width, > .markdown-reading-view > .is-readable-line-width))
-	> .page-width-handles {
+/* --file-line-width only applies with "Readable line length" on; without it, dragging would do nothing.
+   Obsidian sets the class on the source view in both modes, so a sibling selector covers reading mode
+   too (the overlay is appended after it) and avoids :has, which the plugin review flags. */
+.page-width-host > .markdown-source-view:not(.is-readable-line-width) ~ .page-width-handles {
 	display: none;
 }
