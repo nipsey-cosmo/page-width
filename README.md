@@ -1,8 +1,9 @@
 # Page Width
 
-> [!IMPORTANT]
-> **Turn on "Readable line length" first:** Settings → Editor → Readable line length.
-> The grips and the buttons have no effect when this setting is off.
+> [!NOTE]
+> Page Width needs Obsidian's "Readable line length" setting, which is **on by default**.
+> Only if you turned it off: turn it on again in Settings → Editor → Readable line length.
+> The grips and the buttons have no effect while it is off.
 
 Obsidian plugin (desktop only) that sets the readable line width (`--file-line-width`).
 
