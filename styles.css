@@ -70,7 +70,7 @@
 	position: absolute;
 	/* A short grip, vertically centred in the pane; the hit area is a little larger than the pill. */
 	top: 50%;
-	height: 56px;
+	height: 72px;
 	width: 12px;
 	cursor: col-resize;
 	touch-action: none;
@@ -95,11 +95,11 @@
 	position: absolute;
 	top: 8px;
 	bottom: 8px;
-	left: 3px;
-	width: 6px;
+	left: 4.5px;
+	width: 3px;
 	box-sizing: border-box;
 	border: 1px solid var(--background-modifier-border-hover);
-	border-radius: 3px;
+	border-radius: 1.5px;
 	transition: border-color 120ms ease;
 }
 
