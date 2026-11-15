@@ -13,3 +13,9 @@ export function dragWidth(pointerX: number, centreX: number, available: number):
 	const clamped = Math.min(Math.max(raw, MIN_WIDTH_PX), available);
 	return clamped >= available ? '100%' : `${Math.round(clamped)}px`;
 }
+
+/** Guards values read from data.json: only "100%" or whole pixels of at least MIN_WIDTH_PX. */
+export function isValidWidth(value: unknown): value is string {
+	if (value === '100%') return true;
+	return typeof value === 'string' && /^\d+px$/.test(value) && parseInt(value, 10) >= MIN_WIDTH_PX;
+}

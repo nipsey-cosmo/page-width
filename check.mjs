@@ -1,7 +1,7 @@
 // Plain-node check for the pure drag-width maths: `npm run check`.
 // Node 24 strips TypeScript types natively, so the source module is imported directly.
 import assert from 'node:assert/strict';
-import { dragWidth, MIN_WIDTH_PX } from './src/width.ts';
+import { dragWidth, isValidWidth, MIN_WIDTH_PX } from './src/width.ts';
 
 const centre = 1000;
 const available = 1500;
@@ -24,5 +24,14 @@ assert.equal(dragWidth(-5000, centre, available), '100%');
 
 // A pane narrower than the minimum can only be filled.
 assert.equal(dragWidth(1100, centre, 300), '100%');
+
+// Stored-width validation: presets and drag results are accepted...
+for (const ok of ['700px', '1100px', '100%', '400px', dragWidth(1400, centre, available)]) {
+	assert.equal(isValidWidth(ok), true, ok);
+}
+// ...anything else from data.json falls back to the default.
+for (const bad of ['399px', '0px', '50%', '700', ' 700px', '700.5px', '70em', 'calc(100% - 1px)', '', 700, null, undefined, {}]) {
+	assert.equal(isValidWidth(bad), false, String(bad));
+}
 
 console.log('page-width check: all assertions passed');

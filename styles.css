@@ -55,36 +55,55 @@
 	--page-width-column: min(var(--file-line-width), 100% - 2 * var(--file-margins-x));
 }
 
+/*
+ * Obsidian shrinks the margins in the sidebars by setting `--file-margins: var(--size-4-5)` on
+ * the scroller itself (app.css: `.mod-primary-split .markdown-preview-view, ... .cm-scroller`),
+ * which the overlay, a sibling, cannot inherit. Mirror it here.
+ */
+.mod-primary-split .page-width-handles,
+.mod-secondary-split .page-width-handles {
+	--file-margins-x: var(--size-4-5);
+}
+
 .page-width-handle {
 	pointer-events: auto;
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	width: 8px;
-	transform: translateX(-50%); /* centre the hit area on the column edge */
 	cursor: col-resize;
 	touch-action: none;
 }
 
+/* Hit areas sit wholly in the margins, touching the column edge, so they never cover text,
+   checkboxes or anything else at the edge of a line. */
 .page-width-handle.mod-left {
 	left: calc(50% - var(--page-width-column) / 2);
+	transform: translateX(-100%);
 }
 
 .page-width-handle.mod-right {
 	left: calc(50% + var(--page-width-column) / 2);
 }
 
-/* Thin visible line, shown only on hover or while dragging. */
+/* Thin visible line hugging the column edge, shown only on hover or while dragging. */
 .page-width-handle::after {
 	content: '';
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: 3px;
 	width: 2px;
 	background: var(--interactive-accent);
 	opacity: 0;
 	transition: opacity 120ms ease;
+}
+
+.page-width-handle.mod-left::after {
+	right: 0;
+}
+
+.page-width-handle.mod-right::after {
+	left: 0;
 }
 
 .page-width-handle:hover::after,

@@ -1,5 +1,5 @@
 import { MarkdownView, Plugin } from 'obsidian';
-import { dragWidth } from './width';
+import { dragWidth, isValidWidth } from './width';
 
 const PRESETS = [
 	{ label: 'Narrow', width: '700px' }, // Obsidian's own default for --file-line-width
@@ -19,7 +19,7 @@ export default class PageWidthPlugin extends Plugin {
 
 	async onload() {
 		const data = (await this.loadData()) as Partial<PageWidthData> | null;
-		this.setWidth(typeof data?.width === 'string' ? data.width : DEFAULT_WIDTH);
+		this.setWidth(isValidWidth(data?.width) ? data.width : DEFAULT_WIDTH);
 
 		const bar = this.addStatusBarItem();
 		bar.addClass('page-width-bar');
@@ -30,6 +30,9 @@ export default class PageWidthPlugin extends Plugin {
 				attr: { type: 'button', 'aria-label': `Page width: ${preset.label}` },
 			});
 			button.dataset.width = preset.width;
+			// Mouse clicks must not take focus from the editor (typing/Space would hit the button).
+			// Only mousedown is cancelled, so Tab focus and keyboard activation still work.
+			this.registerDomEvent(button, 'mousedown', (e) => e.preventDefault());
 			this.registerDomEvent(button, 'click', () => {
 				this.setWidth(preset.width);
 				void this.save();
@@ -46,8 +49,11 @@ export default class PageWidthPlugin extends Plugin {
 
 		this.register(() => {
 			document.body.style.removeProperty('--file-line-width');
-			document.querySelectorAll('.page-width-handles').forEach((el) => el.remove());
-			document.querySelectorAll(`.${HOST_CLASS}`).forEach((el) => el.removeClass(HOST_CLASS));
+			document.querySelectorAll<HTMLElement>(`.${HOST_CLASS}`).forEach((host) => detach(host));
+			// Leaves moved to pop-out windows live in another document; reach them via the workspace.
+			for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
+				if (leaf.view instanceof MarkdownView) detach(leaf.view.contentEl);
+			}
 		});
 	}
 
@@ -74,36 +80,41 @@ export default class PageWidthPlugin extends Plugin {
 	private attachAll() {
 		for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
 			// Deferred (not yet loaded) leaves are not MarkdownViews; they get handles when revealed.
-			if (leaf.view instanceof MarkdownView) this.attach(leaf.view);
+			if (!(leaf.view instanceof MarkdownView)) continue;
+			// Pop-out windows have their own <body>, which this plugin does not style. A leaf moved to
+			// a pop-out keeps its DOM (and any handles), so strip them rather than only skipping.
+			if (leaf.view.contentEl.ownerDocument !== document) detach(leaf.view.contentEl);
+			else this.attach(leaf.view);
 		}
 	}
 
 	private attach(view: MarkdownView) {
 		const host = view.contentEl; // `.view-content`, parent of both the edit and reading containers
-		// Pop-out windows have their own <body>, which this plugin does not style, so skip them.
-		if (host.ownerDocument !== document || host.hasClass(HOST_CLASS)) return;
+		if (host.hasClass(HOST_CLASS)) return;
 		host.addClass(HOST_CLASS);
 		// Positioning is pure CSS (styles.css), so nothing here needs re-measuring on resize.
 		// The overlay mirrors the scroller's box (including its scrollbar gutter); the handles sit inside it.
 		const overlay = host.createDiv({ cls: 'page-width-handles' });
 		for (const side of ['left', 'right']) {
 			const handle = overlay.createDiv({ cls: `page-width-handle mod-${side}` });
-			this.registerDomEvent(handle, 'pointerdown', (e) => this.startDrag(e, view, handle));
+			// Plain listeners, not this.registerDomEvent: those would keep closed views alive until
+			// plugin unload. The listeners go away with the overlay (removed by detach on unload).
+			handle.addEventListener('pointerdown', (e) => this.startDrag(e, view, handle));
+			// The handles sit over the scroller's margin, so pass wheel scrolling through to it.
+			handle.addEventListener('wheel', (e) => scrollerOf(view)?.scrollBy(e.deltaX, e.deltaY), {
+				passive: true,
+			});
 		}
 	}
 
 	private startDrag(e: PointerEvent, view: MarkdownView, handle: HTMLElement) {
 		if (e.button !== 0) return;
-		// The column is centred inside the scroller's content box: inside its padding
-		// (--file-margins) and excluding its scrollbar gutter, which clientWidth already omits.
-		const selector =
-			view.getMode() === 'preview'
-				? ':scope > .markdown-reading-view > .markdown-preview-view'
-				: ':scope > .markdown-source-view > .cm-editor > .cm-scroller';
-		const scroller = view.contentEl.querySelector<HTMLElement>(selector);
+		const scroller = scrollerOf(view);
 		if (!scroller) return;
 		e.preventDefault();
 
+		// The column is centred inside the scroller's content box: inside its padding
+		// (--file-margins) and excluding its scrollbar gutter, which clientWidth already omits.
 		const style = getComputedStyle(scroller);
 		const paddingLeft = parseFloat(style.paddingLeft);
 		const available = scroller.clientWidth - paddingLeft - parseFloat(style.paddingRight);
@@ -113,14 +124,30 @@ export default class PageWidthPlugin extends Plugin {
 		handle.setPointerCapture(e.pointerId);
 		handle.addClass('is-dragging');
 		const onMove = (ev: PointerEvent) => this.setWidth(dragWidth(ev.clientX, centreX, available));
-		// lostpointercapture fires on both pointerup and pointercancel.
+		// pointerup/pointercancel are the normal ends; lostpointercapture is a fallback (e.g. capture
+		// released some other way). Whichever comes first ends the drag; the rest are no-ops.
+		const endEvents = ['pointerup', 'pointercancel', 'lostpointercapture'] as const;
 		const onEnd = () => {
 			handle.removeEventListener('pointermove', onMove);
-			handle.removeEventListener('lostpointercapture', onEnd);
+			for (const type of endEvents) handle.removeEventListener(type, onEnd);
 			handle.removeClass('is-dragging');
 			void this.save(); // persist once per drag, not on every move
 		};
 		handle.addEventListener('pointermove', onMove);
-		handle.addEventListener('lostpointercapture', onEnd);
+		for (const type of endEvents) handle.addEventListener(type, onEnd);
 	}
+}
+
+/** The element that scrolls and pads the column in the view's current mode. */
+function scrollerOf(view: MarkdownView): HTMLElement | null {
+	const selector =
+		view.getMode() === 'preview'
+			? ':scope > .markdown-reading-view > .markdown-preview-view'
+			: ':scope > .markdown-source-view > .cm-editor > .cm-scroller';
+	return view.contentEl.querySelector<HTMLElement>(selector);
+}
+
+function detach(host: HTMLElement) {
+	host.querySelector(':scope > .page-width-handles')?.remove();
+	host.removeClass(HOST_CLASS);
 }
